@@ -19,7 +19,7 @@ services:
     env_file: .env
 
   app:
-    image: sharetribe:latest
+    image: sharetribe:test
     container_name: app
     mem_limit: 2048m
     hostname: app
@@ -74,6 +74,18 @@ services:
       - 8080:8080
     restart: unless-stopped
     env_file: .env
+
+  assets:
+    image: assets:test
+    container_name: assets
+    hostname: assets
+    domainname: ${RS_DOMAIN}
+    volumes:
+      - app:/home/node/www
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: "no"
 
 volumes:
   proxy-certs:

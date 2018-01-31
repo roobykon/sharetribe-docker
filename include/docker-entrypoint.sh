@@ -1,6 +1,4 @@
 #!/bin/bash
-source /home/${RS_USER}/.rvm/scripts/rvm
-source /home/${RS_USER}/.nvm/nvm.sh
 set -e
 
 function mysql_connect() {
@@ -40,7 +38,7 @@ function sharetribe_ssmtp_conf() {
 function db_structure_load() {
   echo "db_structure_load"
   if [[ $(mysql_connect "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
-    rvm default do bin/bundle exec rake db:structure:load
+    bin/bundle exec rake db:structure:load
   fi
 }
 
@@ -49,7 +47,7 @@ function sharetribe_config_yml() {
   FILE_PATH="/home/${RS_USER}/www/config/config.yml"
     echo "${RAILS_ENV}:" > ${FILE_PATH}
     echo "  domain: 'lvh.me:80'" >> ${FILE_PATH}
-    echo "  secret_key_base: ${RS_SECRET_KEY_BASE:-$(rvm default do bin/bundle exec rake secret)}" >> ${FILE_PATH}
+    echo "  secret_key_base: ${RS_SECRET_KEY_BASE:-$(bin/bundle exec rake secret)}" >> ${FILE_PATH}
     echo "  sharetribe_mail_from_address: ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
     echo "  feedback_mailer_recipients: manager@${RS_DOMAIN}"
 }
@@ -74,8 +72,7 @@ function help() {
   echo "  db_structure - bin/bundle exec rake db:structure:load"
   echo "  domain       - set domain to db"
   echo "  payments     - load payment table structure to db"
-  echo "  assets       - bin/bundle exec rake assets:precompile"
-  echo "  all          - domain && payments && assets"
+  echo "  all          - domain && payments"
   echo ""
   echo "--server"
   echo "  start        - set database.yml && set ssmtp.conf && start web server"
@@ -96,12 +93,9 @@ case "$1:$2" in
   --config:payments)
     mysql_connect "INSERT INTO ${MYSQL_DATABASE}.payment_settings (id, active, community_id, payment_gateway, payment_process, commission_from_seller, minimum_price_cents, minimum_price_currency, minimum_transaction_fee_cents, minimum_transaction_fee_currency, confirmation_after_days, created_at, updated_at, api_client_id, api_private_key, api_publishable_key, api_verified, api_visible_private_key, api_country) VALUES (121240, 1, 1, 'paypal', 'preauthorize', NULL, NULL, NULL, NULL, NULL, 14, '2017-10-22 20:12:39', '2017-11-13 23:03:39', NULL, NULL, NULL, 0, NULL, NULL), (121241, 1, 1, 'stripe', 'preauthorize', NULL, NULL, NULL, NULL, NULL, 14, '2017-10-22 20:12:39', '2017-11-13 23:03:39', NULL, NULL, NULL, 0, NULL, NULL);"
   ;;
-  --config:assets)
-    rvm default do bin/bundle exec rake assets:precompile ;;
   --config:all)
     ${0} --config domain
     ${0} --config payments
-    ${0} --config assets
   ;;
   --server:start)
     ${0} --config database
