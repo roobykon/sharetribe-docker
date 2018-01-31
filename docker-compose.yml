@@ -1,0 +1,82 @@
+version: '2.1'
+
+services:
+  proxy:
+    image: jwilder/nginx-proxy:alpine
+    container_name: proxy
+    hostname: proxy
+    domainname: ${RS_DOMAIN}
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - proxy-certs:/etc/nginx/certs
+      - proxy-dhparam:/etc/nginx/dhparam
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    env_file: .env
+
+  app:
+    image: sharetribe:latest
+    container_name: app
+    mem_limit: 2048m
+    hostname: app
+    domainname: ${RS_DOMAIN}
+    links:
+      - mysqld:mysql.${RS_DOMAIN}
+      - smtpd:smtp.${RS_DOMAIN}
+    ports:
+      - 9001:9001
+    volumes:
+      - app:/home/sharetribe/www
+    depends_on:
+      mysqld:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000"]
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=${RS_DOMAIN}
+      - VIRTUAL_PORT=3000
+    env_file: .env
+
+  mysqld:
+    image: mysql:5.7
+    container_name: mysql
+    mem_limit: 1024m
+    hostname: mysql
+    domainname: ${RS_DOMAIN}
+    volumes:
+      - mysqld:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping"]
+    restart: unless-stopped
+    env_file: .env
+
+  smtpd:
+    image: catatnight/postfix
+    container_name: smtp
+    hostname: smtp
+    domainname: ${RS_DOMAIN}
+    restart: unless-stopped
+    env_file: .env
+
+  adminer:
+    image: adminer:standalone
+    container_name: adminer
+    hostname: adminer
+    domainname: ${RS_DOMAIN}
+    links:
+      - mysqld:mysql.${RS_DOMAIN}
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    env_file: .env
+
+volumes:
+  proxy-certs:
+  proxy-dhparam:
+  app:
+  mysqld:
