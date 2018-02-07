@@ -1,23 +1,23 @@
 version: '2.1'
 
 services:
-  proxy:
-    image: jwilder/nginx-proxy:alpine
-    container_name: proxy
-    hostname: proxy
-    domainname: ${RS_DOMAIN}
-    ports:
-      - 80:80
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - proxy-certs:/etc/nginx/certs
-      - proxy-dhparam:/etc/nginx/dhparam
-    depends_on:
-      app:
-        condition: service_healthy
-    restart: unless-stopped
-    env_file: .env
-
+#  proxy:
+#    image: jwilder/nginx-proxy:alpine
+#    container_name: proxy
+#    hostname: proxy
+#    domainname: ${RS_DOMAIN}
+#    ports:
+#      - 80:80
+#    volumes:
+#      - /var/run/docker.sock:/tmp/docker.sock:ro
+#      - proxy-certs:/etc/nginx/certs
+#      - proxy-dhparam:/etc/nginx/dhparam
+#    depends_on:
+#      app:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    env_file: .env
+#
   app:
     image: sharetribe:test
     container_name: app
@@ -30,7 +30,7 @@ services:
     ports:
       - 9001:9001
     volumes:
-      - app:/home/sharetribe/www
+      - app:/opt/app/www
     depends_on:
       mysqld:
         condition: service_healthy
@@ -74,18 +74,6 @@ services:
       - 8080:8080
     restart: unless-stopped
     env_file: .env
-
-  assets:
-    image: assets:test
-    container_name: assets
-    hostname: assets
-    domainname: ${RS_DOMAIN}
-    volumes:
-      - app:/home/node/www
-    depends_on:
-      app:
-        condition: service_healthy
-    restart: "no"
 
 volumes:
   proxy-certs:
