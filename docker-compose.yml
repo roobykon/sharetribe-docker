@@ -41,6 +41,7 @@ services:
       - VIRTUAL_HOST=${RS_DOMAIN}
       - VIRTUAL_PORT=3000
     env_file: .env
+    command: web
 
   mysqld:
     image: mysql:5.7
