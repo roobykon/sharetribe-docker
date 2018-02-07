@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+APP_MODE="1:-web"
+
 function mysql_connect() {
   mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}"
 }
@@ -81,7 +83,7 @@ function help() {
   echo ""
 }
 
-case "$1:$2" in
+case "${1}:${2}" in
   --config:database) sharetribe_database_yml ;;
   --config:config) sharetribe_config_yml ;;
   --config:ssmtp) sharetribe_ssmtp_conf ;;
@@ -97,6 +99,7 @@ case "$1:$2" in
     ${0} --config domain
     ${0} --config payments
   ;;
+  --deploy:app)  ;;
   --server:start)
     ${0} --config database
     ${0} --config config
@@ -106,4 +109,15 @@ case "$1:$2" in
   ;;
   -h|--help) help ;;
   *) help ;;
+    web)
+        bundle exec passenger \
+            start \
+            --port "${PORT:-3000}" \
+            --log-file "/dev/stdout" \
+            --min-instances "${PASSENGER_MIN_INSTANCES:-1}" \
+            --max-pool-size "${PASSENGER_MAX_POOL_SIZE:-1}"
+    ;;
+    worker)
+        bundle exec rake jobs:work
+    ;;
 esac
