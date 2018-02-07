@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-APP_MODE="1:-web"
-
 function mysql_connect() {
   mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}"
 }
