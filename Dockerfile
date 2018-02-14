@@ -25,7 +25,7 @@ RUN useradd \
         --shell /bin/bash \
             ${RS_USER}
 
-COPY --chown=root:1000 include/docker-entrypoint.sh /docker-entrypoint.sh
+COPY include/docker-entrypoint.sh /docker-entrypoint.sh
 
 USER ${RS_USER}:${RS_USER}
 
