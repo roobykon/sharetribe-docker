@@ -1,82 +1,147 @@
-version: '2.1'
+version: '2'
 
 services:
-#  proxy:
-#    image: jwilder/nginx-proxy:alpine
-#    container_name: proxy
-#    hostname: proxy
-#    domainname: ${RS_DOMAIN}
-#    ports:
-#      - 80:80
-#    volumes:
-#      - /var/run/docker.sock:/tmp/docker.sock:ro
-#      - proxy-certs:/etc/nginx/certs
-#      - proxy-dhparam:/etc/nginx/dhparam
-#    depends_on:
-#      app:
-#        condition: service_healthy
-#    restart: unless-stopped
-#    env_file: .env
-#
+  proxy:
+    image: jwilder/nginx-proxy:alpine
+    container_name: proxy
+    hostname: proxy
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - proxy.sharetribe.kresto.pp.ua
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - proxy-certs:/etc/nginx/certs
+      - proxy-dhparam:/etc/nginx/dhparam
+    depends_on:
+      - app
+    restart: unless-stopped
+
   app:
     image: sharetribe:test
     container_name: app
     mem_limit: 2048m
     hostname: app
-    domainname: ${RS_DOMAIN}
-    links:
-      - mysqld:mysql.${RS_DOMAIN}
-      - smtpd:smtp.${RS_DOMAIN}
-    ports:
-      - 9001:9001
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - app.sharetribe.kresto.pp.ua
     volumes:
       - app:/opt/app/www
     depends_on:
-      mysqld:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:3000"]
+      - mysqld
     restart: unless-stopped
     environment:
-      - VIRTUAL_HOST=${RS_DOMAIN}
+      - VIRTUAL_HOST=sharetribe.kresto.pp.ua
       - VIRTUAL_PORT=3000
-    env_file: .env
+      - RAILS_ENV=production
+      - RS_DOMAIN=sharetribe.kresto.pp.ua
+      - RS_AUTH_USER=noreply
+      - RS_AUTH_PASS=passwd
+      - MYSQL_ROOT_PASSWORD=123123123
+      - MYSQL_DATABASE=sharetribe_db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=passwd
+      - MYSQL_HOST=mysql.sharetribe.local
+      - SPHINX_HOST=search.sharetribe.kresto.pp.ua
+      - redis_host=memcache.sharetribe.kresto.pp.ua
+      - redis_port=6379
+      - redis_db=1
+      - redis_expires_in=240
+
+  worker:
+    image: sharetribe:test
+    container_name: worker
+    hostname: worker
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - worker.sharetribe.kresto.pp.ua
+          - search.sharetribe.kresto.pp.ua
+    volumes:
+      - app:/opt/app/www
+    depends_on:
+      - app
+    command: worker
+    restart: unless-stopped
+    environment:
+      - RAILS_ENV=production
+      - SPHINX_HOST=search.sharetribe.kresto.pp.ua
 
   mysqld:
     image: mysql:5.7
     container_name: mysql
     mem_limit: 1024m
     hostname: mysql
-    domainname: ${RS_DOMAIN}
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - mysql.sharetribe.kresto.pp.ua
     volumes:
       - mysqld:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping"]
     restart: unless-stopped
-    env_file: .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=123123123
+      - MYSQL_DATABASE=sharetribe_db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=passwd
 
   smtpd:
     image: catatnight/postfix
     container_name: smtp
     hostname: smtp
-    domainname: ${RS_DOMAIN}
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - smtp.sharetribe.kresto.pp.ua
+    depends_on:
+      - app
     restart: unless-stopped
-    env_file: .env
+    environment:
+      - maildomain=sharetribe.kresto.pp.ua
+      - smtp_user=noreply:passwd
+
+  memcache:
+    image: redis:3.2-alpine
+    container_name: memcache
+    hostname: memcache
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - memcache.sharetribe.kresto.pp.ua
+    depends_on:
+      - app
+    restart: unless-stopped
 
   adminer:
     image: adminer:standalone
     container_name: adminer
     hostname: adminer
-    domainname: ${RS_DOMAIN}
-    links:
-      - mysqld:mysql.${RS_DOMAIN}
+    domainname: sharetribe.kresto.pp.ua
+    networks:
+      sharetribe:
+        aliases:
+          - adminer.sharetribe.kresto.pp.ua
     ports:
       - 8080:8080
+    depends_on:
+      - mysqld
     restart: unless-stopped
-    env_file: .env
 
 volumes:
   proxy-certs:
   proxy-dhparam:
   app:
   mysqld:
+
+networks:
+  sharetribe:
