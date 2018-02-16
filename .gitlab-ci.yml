@@ -14,7 +14,7 @@ build:
     - docker info
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $REGISTRY_HOST
   script:
-    - docker build --pull --build-arg RS_GIT_REMOTE_URL=gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.kresto.pp.ua:example/example1.git --build-arg RS_GIT_BRANCH=sharetribe --tag $IMAGE .
+    - docker build --pull --build-arg RS_GIT_REMOTE_URL=https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.kresto.pp.ua:example/example1.git --build-arg RS_GIT_BRANCH=sharetribe --tag $IMAGE .
     - docker push $IMAGE
 
 deploy_development:
