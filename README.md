@@ -1,4 +1,4 @@
-1. add sharetribe.local >> /etc/hosts
+1. add sharetribe.local >> /etc/hosts (or add your domain to docker-compose.yml instead sharetribe.local)
 2. docker swarm init (enabled swarm mode to use 'docker stack' or adaptive docker-compose.yml for docker-compose command)
 3. docker stack deploy --compose-file docker-compose.yml example
 4. check mysql logs "docker service logs -f example_app" and wait before "mysqld: ready for connections"
