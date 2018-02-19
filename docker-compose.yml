@@ -11,7 +11,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: web
@@ -37,7 +37,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: app
@@ -75,7 +75,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: worker
@@ -103,7 +103,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: mysql
@@ -129,7 +129,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: smtp
@@ -151,7 +151,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: memcache
@@ -172,7 +172,7 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: rollback
-        monitor: 120s
+        monitor: 30s
         order: start-first
     domainname: sharetribe.local
     hostname: adminer
