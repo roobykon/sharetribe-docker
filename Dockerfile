@@ -1,4 +1,4 @@
-FROM registry.kresto.pp.ua/sharetribe/onbuild:master
+FROM sharetribe:onbuild
 
 SHELL ["/bin/bash", "--login", "-c"]
 
@@ -41,4 +41,4 @@ RUN git clone --branch ${RS_GIT_BRANCH} ${RS_GIT_REMOTE_URL} ${RS_APP_ROOT} && \
 WORKDIR ${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}
 EXPOSE 3000
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["web"]
+CMD ["app"]

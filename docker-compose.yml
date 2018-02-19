@@ -1,147 +1,195 @@
-version: '2'
+version: '3.4'
 
 services:
-  proxy:
+  web:
     image: jwilder/nginx-proxy:alpine
-    container_name: proxy
-    hostname: proxy
-    domainname: sharetribe.kresto.pp.ua
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
+    hostname: web
     networks:
-      sharetribe:
+      local:
         aliases:
-          - proxy.sharetribe.kresto.pp.ua
+           - web
     ports:
       - 80:80
       - 443:443
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - proxy-certs:/etc/nginx/certs
-      - proxy-dhparam:/etc/nginx/dhparam
-    depends_on:
-      - app
-    restart: unless-stopped
+      - web-certs:/etc/nginx/certs
+      - web-dhparam:/etc/nginx/dhparam
 
   app:
-    image: sharetribe:test
-    container_name: app
-    mem_limit: 2048m
+    image: kre100/sharetribe:latest
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
     hostname: app
-    domainname: sharetribe.kresto.pp.ua
     networks:
-      sharetribe:
+      local:
         aliases:
-          - app.sharetribe.kresto.pp.ua
+          - app
     volumes:
       - app:/opt/app/www
-    depends_on:
-      - mysqld
-    restart: unless-stopped
     environment:
-      - VIRTUAL_HOST=sharetribe.kresto.pp.ua
+      - VIRTUAL_HOST=sharetribe.local
       - VIRTUAL_PORT=3000
       - RAILS_ENV=production
-      - RS_DOMAIN=sharetribe.kresto.pp.ua
+      - RS_DOMAIN=sharetribe.local
       - RS_AUTH_USER=noreply
       - RS_AUTH_PASS=passwd
       - MYSQL_ROOT_PASSWORD=123123123
       - MYSQL_DATABASE=sharetribe_db
       - MYSQL_USER=user
       - MYSQL_PASSWORD=passwd
-      - MYSQL_HOST=mysql.sharetribe.local
-      - SPHINX_HOST=search.sharetribe.kresto.pp.ua
-      - redis_host=memcache.sharetribe.kresto.pp.ua
+      - MYSQL_HOST=mysql
+      - SPHINX_HOST=search
+      - redis_host=memcache
       - redis_port=6379
       - redis_db=1
       - redis_expires_in=240
 
   worker:
-    image: sharetribe:test
-    container_name: worker
+    image: kre100/sharetribe:latest
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
     hostname: worker
-    domainname: sharetribe.kresto.pp.ua
     networks:
-      sharetribe:
+      local:
         aliases:
-          - worker.sharetribe.kresto.pp.ua
-          - search.sharetribe.kresto.pp.ua
+          - worker
+          - search
     volumes:
       - app:/opt/app/www
-    depends_on:
-      - app
     command: worker
-    restart: unless-stopped
     environment:
       - RAILS_ENV=production
-      - SPHINX_HOST=search.sharetribe.kresto.pp.ua
+      - RS_DOMAIN=sharetribe.local
+      - RS_AUTH_USER=noreply
+      - RS_AUTH_PASS=passwd
 
-  mysqld:
+  mysql:
     image: mysql:5.7
-    container_name: mysql
-    mem_limit: 1024m
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
     hostname: mysql
-    domainname: sharetribe.kresto.pp.ua
     networks:
-      sharetribe:
+      local:
         aliases:
-          - mysql.sharetribe.kresto.pp.ua
+          - mysql
     volumes:
-      - mysqld:/var/lib/mysql
-    restart: unless-stopped
+      - mysql:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=123123123
       - MYSQL_DATABASE=sharetribe_db
       - MYSQL_USER=user
       - MYSQL_PASSWORD=passwd
 
-  smtpd:
+  smtp:
     image: catatnight/postfix
-    container_name: smtp
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
     hostname: smtp
-    domainname: sharetribe.kresto.pp.ua
     networks:
-      sharetribe:
+      local:
         aliases:
-          - smtp.sharetribe.kresto.pp.ua
-    depends_on:
-      - app
-    restart: unless-stopped
+          - smtp
     environment:
-      - maildomain=sharetribe.kresto.pp.ua
+      - maildomain=sharetribe.local
       - smtp_user=noreply:passwd
 
   memcache:
     image: redis:3.2-alpine
-    container_name: memcache
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
     hostname: memcache
-    domainname: sharetribe.kresto.pp.ua
     networks:
-      sharetribe:
+      local:
         aliases:
-          - memcache.sharetribe.kresto.pp.ua
-    depends_on:
-      - app
-    restart: unless-stopped
+          - memcache
+    volumes:
+      - memcache:/data
 
   adminer:
     image: adminer:standalone
-    container_name: adminer
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == node2.cloud.kresto.pp.ua
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 120s
+        order: start-first
+    domainname: sharetribe.local
     hostname: adminer
-    domainname: sharetribe.kresto.pp.ua
     networks:
-      sharetribe:
+      local:
         aliases:
-          - adminer.sharetribe.kresto.pp.ua
+          - adminer
     ports:
       - 8080:8080
-    depends_on:
-      - mysqld
-    restart: unless-stopped
 
 volumes:
-  proxy-certs:
-  proxy-dhparam:
+  web-certs:
+  web-dhparam:
   app:
-  mysqld:
+  mysql:
+  memcache:
 
 networks:
-  sharetribe:
+  local:
+    driver: overlay

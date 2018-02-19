@@ -1,12 +1,14 @@
 #!/bin/bash
 set -e
 
-function mysql_connect() {
+function mysql_connect_check() {
     mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}"
 }
 
 function app_database_yml() {
-    echo "database.yml"
+    FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/database.yml"
+    echo "exec app_database_yml()"
+    echo "${FILE_PATH}"
     if [[ -n ${MYSQL_DATABASE} ]] && [[ -n ${MYSQL_USER} ]] && [[ -n ${MYSQL_PASSWORD} ]] && [[ -n ${MYSQL_HOST} ]]; then
         FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/database.yml"
         echo "${RAILS_ENV}:" > ${FILE_PATH}
@@ -20,8 +22,9 @@ function app_database_yml() {
 }
 
 function app_config_yml() {
-    echo "config.yml"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/config.yml"
+    echo "exec app_config_yml()"
+    echo "${FILE_PATH}"
         echo "${RAILS_ENV}:" > ${FILE_PATH}
         echo "  domain: 'lvh.me:80'" >> ${FILE_PATH}
         echo "  secret_key_base: ${RS_SECRET_KEY_BASE:-$(bin/bundle exec rake secret)}" >> ${FILE_PATH}
@@ -29,9 +32,10 @@ function app_config_yml() {
 }
 
 function app_msmtp_conf() {
-    echo "ssmtp.conf"
+    FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtprc"
+    echo "exec app_msmtp_conf()"
+    echo "${FILE_PATH}"
     if [[ -n ${RS_DOMAIN} ]] && [[ -n ${RS_AUTH_USER} ]] && [[ -n ${RS_AUTH_PASS} ]]; then
-        FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtprc"
         echo "# Set default values for all following accounts." > ${FILE_PATH}
         echo "defaults" >> ${FILE_PATH}
         echo "auth           on" >> ${FILE_PATH}
@@ -41,7 +45,7 @@ function app_msmtp_conf() {
         echo "" >> ${FILE_PATH}
         echo "# smtp" >> ${FILE_PATH}
         echo "account        local" >> ${FILE_PATH}
-        echo "host           smtp.${RS_DOMAIN}" >> ${FILE_PATH}
+        echo "host           smtp" >> ${FILE_PATH}
         echo "port           25" >> ${FILE_PATH}
         echo "from           ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
         echo "user           ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
@@ -50,13 +54,16 @@ function app_msmtp_conf() {
         echo "# Set a default account" >> ${FILE_PATH}
         echo "account default : local" >> ${FILE_PATH}
     fi
+    chmod u=rw,g=,o= ${FILE_PATH}
 }
 
 function db_structure_load() {
-    echo "db_structure_load"
-    if [[ $(mysql_connect "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
+    set -x
+    if [[ $(mysql_connect_check "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
+        echo "exec db_structure_load()"
         bundle exec rake db:structure:load
     fi
+    set +x
 }
 
 # if [[ -n ${TZDATA} ]]; then
@@ -69,7 +76,7 @@ function db_structure_load() {
 # fi
 
 case ${1} in
-    web)
+    app)
         app_database_yml
         app_config_yml
         app_msmtp_conf
@@ -82,6 +89,7 @@ case ${1} in
                 --log-file "/dev/stdout" \
     ;;
     worker)
+        app_msmtp_conf
         bundle exec rake ts:configure ts:index ts:start
         bundle exec rake jobs:work
     ;;
