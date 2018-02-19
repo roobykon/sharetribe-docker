@@ -3,7 +3,7 @@
 3. docker stack deploy --compose-file docker-compose.yml example
 4. check mysql logs "docker service logs -f example_app" and wait before "mysqld: ready for connections"
 5. restart app service "docker service update example_app"
-4. open in browser http://sharetribe.local and finish setup marketplace
-5. check email system working
-6. check search system working
-7. check memcache in logs
+6. open in browser http://sharetribe.local and finish setup marketplace
+7. check email system working
+8. check search system working
+9. check memcache in logs
