@@ -50,7 +50,6 @@ services:
     environment:
       - VIRTUAL_HOST=sharetribe.local
       - VIRTUAL_PORT=3000
-<<<<<<< HEAD
       - RAILS_ENV=production
       - RS_DOMAIN=sharetribe.local
       - RS_AUTH_USER=noreply
@@ -65,10 +64,6 @@ services:
       - redis_port=6379
       - redis_db=1
       - redis_expires_in=240
-=======
-    env_file: .env
-    command: web
->>>>>>> f555dd856f7b3e3bda288c205201bb658efae230
 
   worker:
     image: kre100/sharetribe:latest
