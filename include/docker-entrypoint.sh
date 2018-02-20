@@ -1,16 +1,26 @@
 #!/bin/bash
 set -e
 
+export SPHINX_HOST=search
+export MYSQL_HOST=mysql
+export redis_host=memcache
+export redis_port=6379
+export redis_db=1
+export redis_expires_in=240
+
+function echo_info() {
+    echo "${1}"
+    echo "    >> ${2}"
+}
+
 function mysql_exec() {
-    set -x
-    mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}"
-    set +x
+    mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}" 2>&1
 }
 
 function app_database_yml() {
+    FUNC_NAME="app_database_yml"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/database.yml"
-    echo "exec app_database_yml()"
-    echo "${FILE_PATH}"
+    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ -n ${MYSQL_DATABASE} ]] && [[ -n ${MYSQL_USER} ]] && [[ -n ${MYSQL_PASSWORD} ]] && [[ -n ${MYSQL_HOST} ]]; then
         echo "${RAILS_ENV}:" > ${FILE_PATH}
         echo "    adapter: mysql2" >> ${FILE_PATH}
@@ -23,19 +33,18 @@ function app_database_yml() {
 }
 
 function app_config_yml() {
+    FUNC_NAME="app_config_yml"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/config.yml"
-    echo "exec app_config_yml()"
-    echo "${FILE_PATH}"
-        echo "${RAILS_ENV}:" > ${FILE_PATH}
-        echo "  domain: 'lvh.me:80'" >> ${FILE_PATH}
-        echo "  secret_key_base: ${RS_SECRET_KEY_BASE:-$(bin/bundle exec rake secret)}" >> ${FILE_PATH}
-        echo "  sharetribe_mail_from_address: ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
+    echo_info ${FUNC_NAME} ${FILE_PATH}
+    echo "${RAILS_ENV}:" > ${FILE_PATH}
+    echo "  secret_key_base: \"${RS_SECRET_KEY_BASE:-$(bin/bundle exec rake secret)}\"" >> ${FILE_PATH}
+    echo "  sharetribe_mail_from_address: \"${RS_AUTH_USER}@${RS_DOMAIN}\"" >> ${FILE_PATH}
 }
 
 function app_msmtp_conf() {
+    FUNC_NAME="app_msmtp_conf"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtprc"
-    echo "exec app_msmtp_conf()"
-    echo "${FILE_PATH}"
+    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ -n ${RS_DOMAIN} ]] && [[ -n ${RS_AUTH_USER} ]] && [[ -n ${RS_AUTH_PASS} ]]; then
         echo "# Set default values for all following accounts." > ${FILE_PATH}
         echo "defaults" >> ${FILE_PATH}
@@ -59,8 +68,10 @@ function app_msmtp_conf() {
 }
 
 function db_structure_load() {
+    FUNC_NAME="db_structure_load"
+    FILE_PATH="mysql_exec"
+    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ $(mysql_exec "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
-        echo "exec db_structure_load()"
         bundle exec rake db:structure:load
     fi
 }
@@ -75,7 +86,7 @@ function db_structure_load() {
 # fi
 
 function help() {
-    echo "usege: ${0} [OPTIONS]"
+    echo "usage: ${0} [OPTIONS]"
     echo "OPTIONS:"
     echo "-h | --help     - print help"
     echo ""
@@ -108,25 +119,22 @@ case ${1}:${2} in
         app_config_yml
         app_msmtp_conf
         db_structure_load
-        if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
-            bundle exec gem install foreman
-            bundle install --deployment
-            npm install
-            bundle exec rake assets:clobber
-            bundle exec foreman \
-                start \
-                    --port "${PORT:-3000}" \
-                    --log-file "/dev/stdout" \
-                    --procfile Procfile.static && \
+        if [[ $(mysql_exec "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") -ne 0 ]]; then
             ${0} app deploy
+        fi
+        if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+            bundle exec rake assets:clobber
+            foreman start \
+                --port "${PORT:-3000}" \
+                --procfile Procfile.static
         else
+            script/prepare-assets.sh
             bundle exec passenger \
                 start \
                     --port "${PORT:-3000}" \
                     --min-instances "${PASSENGER_MIN_INSTANCES:-1}" \
                     --max-pool-size "${PASSENGER_MAX_POOL_SIZE:-1}" \
-                    --log-file "/dev/stdout" && \
-            ${0} app deploy
+                    --log-file "/dev/stdout"
         fi
     ;;
     worker:)

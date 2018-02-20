@@ -1,4 +1,4 @@
-FROM sharetribe:onbuild
+FROM sharetribe:prebuild
 
 SHELL ["/bin/bash", "--login", "-c"]
 
@@ -33,8 +33,8 @@ WORKDIR ${RS_HOME_DIR_PREFIX}/${RS_USER}
 
 RUN git clone --branch ${RS_GIT_BRANCH} ${RS_GIT_REMOTE_URL} ${RS_APP_ROOT} && \
     cd ${RS_APP_ROOT} && \
-    gem install bundler rake:11.3.0 && \
-    bundle install --deployment --without test,development && \
+    gem install bundler rake:11.3.0 foreman && \
+    bundle install && \
     npm install && \
     script/prepare-assets.sh
 

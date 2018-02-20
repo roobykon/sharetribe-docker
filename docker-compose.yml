@@ -6,9 +6,9 @@ services:
   web:
     image: jwilder/nginx-proxy:alpine
     container_name: web
-    mem_limit: 256m
+    mem_limit: 128m
     hostname: web
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
@@ -23,11 +23,11 @@ services:
     restart: unless-stopped
 
   app:
-    image: kre100/sharetribe:latest
+    image: sharetribe
     container_name: app
     mem_limit: 2048m
     hostname: app
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
@@ -40,31 +40,17 @@ services:
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:${PORT-3000}"]
     restart: unless-stopped
+    env_file: .env
     environment:
-      - VIRTUAL_HOST=sharetribe.local
-      - VIRTUAL_PORT=3000
-      - RAILS_ENV=production
-      - NODE_ENV=production
-      - RS_DOMAIN=sharetribe.local
-      - RS_AUTH_USER=noreply
-      - RS_AUTH_PASS=passwd
-      - MYSQL_ROOT_PASSWORD=123123123
-      - MYSQL_DATABASE=sharetribe_db
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=passwd
-      - MYSQL_HOST=mysql
-      - SPHINX_HOST=search
-      - redis_host=memcache
-      - redis_port=6379
-      - redis_db=1
-      - redis_expires_in=240
+      - VIRTUAL_HOST=${RS_DOMAIN}
+      - VIRTUAL_PORT=${PORT:-3000}
 
   worker:
-    image: kre100/sharetribe:latest
+    image: sharetribe
     container_name: worker
     mem_limit: 1024m
     hostname: worker
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
@@ -77,19 +63,14 @@ services:
       app:
         condition: service_healthy
     restart: unless-stopped
-    environment:
-      - RAILS_ENV=production
-      - NODE_ENV=production
-      - RS_DOMAIN=sharetribe.local
-      - RS_AUTH_USER=noreply
-      - RS_AUTH_PASS=passwd
+    env_file: .env
 
   mysql:
     image: mysql:5.7
     container_name: mysql
     mem_limit: 1024m
     hostname: mysql
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
@@ -99,33 +80,30 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping"]
     restart: unless-stopped
-    environment:
-      - MYSQL_ROOT_PASSWORD=123123123
-      - MYSQL_DATABASE=sharetribe_db
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=passwd
+    env_file: .env
 
   smtp:
     image: catatnight/postfix
     container_name: smtp
-    mem_limit: 256m
+    mem_limit: 128m
     hostname: smtp
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
           - smtp
+    depends_on:
+      app:
+        condition: service_healthy
     restart: unless-stopped
-    environment:
-      - maildomain=sharetribe.local
-      - smtp_user=noreply:passwd
+    env_file: .env
 
   memcache:
     image: redis:3.2-alpine
     container_name: memcache
-    mem_limit: 1024m
+    mem_limit: 512m
     hostname: memcache
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
@@ -133,16 +111,16 @@ services:
     volumes:
       - memcache:/data
     depends_on:
-      app:
+      mysql:
         condition: service_healthy
     restart: unless-stopped
 
   adminer:
     image: adminer:standalone
     container_name: adminer
-    mem_limit: 256m
+    mem_limit: 128m
     hostname: adminer
-    domainname: sharetribe.local
+    domainname: ${RS_DOMAIN}
     networks:
       local:
         aliases:
@@ -158,6 +136,10 @@ volumes:
   web-certs:
   web-dhparam:
   app:
+    driver_opts:
+      type: none
+      device: ${PWD}/data
+      o: bind
   mysql:
   memcache:
 
