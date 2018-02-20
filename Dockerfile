@@ -6,14 +6,14 @@ LABEL maintainer="Roobykon Software - roobykon.com \
                   anatoliy.zhuravlev@roobykon.com \
                   contact@roobykon.com"
 
-ENV RAILS_ENV="production" \
-    NODE_ENV="production" \
-    NPM_CONFIG_LOGLEVEL="error" \
+ENV NPM_CONFIG_LOGLEVEL="error" \
     NPM_CONFIG_PRODUCTION="true" \
     RS_HOME_DIR_PREFIX="/opt" \
     RS_USER="app" \
     RS_APP_ROOT="www"
 
+ARG RAILS_ENV="production"
+ARG NODE_ENV="production"
 ARG RS_GIT_REMOTE_URL="https://github.com/sharetribe/sharetribe.git"
 ARG RS_GIT_BRANCH="master"
 

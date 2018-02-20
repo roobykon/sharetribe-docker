@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-function mysql_connect_check() {
+function mysql_exec() {
+    set -x
     mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}"
+    set +x
 }
 
 function app_database_yml() {
@@ -10,7 +12,6 @@ function app_database_yml() {
     echo "exec app_database_yml()"
     echo "${FILE_PATH}"
     if [[ -n ${MYSQL_DATABASE} ]] && [[ -n ${MYSQL_USER} ]] && [[ -n ${MYSQL_PASSWORD} ]] && [[ -n ${MYSQL_HOST} ]]; then
-        FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/database.yml"
         echo "${RAILS_ENV}:" > ${FILE_PATH}
         echo "    adapter: mysql2" >> ${FILE_PATH}
         echo "    database: ${MYSQL_DATABASE}" >> ${FILE_PATH}
@@ -58,12 +59,10 @@ function app_msmtp_conf() {
 }
 
 function db_structure_load() {
-    set -x
-    if [[ $(mysql_connect_check "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
+    if [[ $(mysql_exec "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
         echo "exec db_structure_load()"
         bundle exec rake db:structure:load
     fi
-    set +x
 }
 
 # if [[ -n ${TZDATA} ]]; then
@@ -75,22 +74,66 @@ function db_structure_load() {
 #     dpkg-reconfigure --frontend noninteractive tzdata
 # fi
 
-case ${1} in
-    app)
+function help() {
+    echo "usege: ${0} [OPTIONS]"
+    echo "OPTIONS:"
+    echo "-h | --help     - print help"
+    echo ""
+    echo "config domain   - set domain to db"
+    echo "config payments - load payment table structure to db"
+    echo "config all      - exec all config suboptions"
+    echo ""
+    echo "app deploy      - rake db:migrate"
+    echo "app             - start app server"
+    echo "worker          - start delayed_job and sphinxsearch"
+}
+
+case ${1}:${2} in
+    config:domain)
+        mysql_exec "UPDATE ${MYSQL_DATABASE}.communities SET domain = \"${RS_DOMAIN}\" WHERE id = '1';"
+        mysql_exec "UPDATE ${MYSQL_DATABASE}.communities SET use_domain = '1' WHERE id = '1';"
+    ;;
+    config:payments)
+        mysql_exec "INSERT INTO ${MYSQL_DATABASE}.payment_settings (id, active, community_id, payment_gateway, payment_process, commission_from_seller, minimum_price_cents, minimum_price_currency, minimum_transaction_fee_cents, minimum_transaction_fee_currency, confirmation_after_days, created_at, updated_at, api_client_id, api_private_key, api_publishable_key, api_verified, api_visible_private_key, api_country) VALUES (121240, 1, 1, 'paypal', 'preauthorize', NULL, NULL, NULL, NULL, NULL, 14, '2017-10-22 20:12:39', '2017-11-13 23:03:39', NULL, NULL, NULL, 0, NULL, NULL), (121241, 1, 1, 'stripe', 'preauthorize', NULL, NULL, NULL, NULL, NULL, 14, '2017-10-22 20:12:39', '2017-11-13 23:03:39', NULL, NULL, NULL, 0, NULL, NULL);"
+    ;;
+    config:all)
+        ${0} config domain
+        ${0} config payments
+    ;;
+    app:deploy)
+        bundle exec rake db:migrate
+    ;;
+    app:)
         app_database_yml
         app_config_yml
         app_msmtp_conf
         db_structure_load
-        bundle exec passenger \
-            start \
-                --port "${PORT:-3000}" \
-                --min-instances "${PASSENGER_MIN_INSTANCES:-1}" \
-                --max-pool-size "${PASSENGER_MAX_POOL_SIZE:-1}" \
-                --log-file "/dev/stdout" \
+        if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+            bundle exec gem install foreman
+            bundle install --deployment
+            npm install
+            bundle exec rake assets:clobber
+            bundle exec foreman \
+                start \
+                    --port "${PORT:-3000}" \
+                    --log-file "/dev/stdout" \
+                    --procfile Procfile.static && \
+            ${0} app deploy
+        else
+            bundle exec passenger \
+                start \
+                    --port "${PORT:-3000}" \
+                    --min-instances "${PASSENGER_MIN_INSTANCES:-1}" \
+                    --max-pool-size "${PASSENGER_MAX_POOL_SIZE:-1}" \
+                    --log-file "/dev/stdout" && \
+            ${0} app deploy
+        fi
     ;;
-    worker)
+    worker:)
         app_msmtp_conf
         bundle exec rake ts:configure ts:index ts:start
         bundle exec rake jobs:work
     ;;
+    -h:|--help:) help ;;
+    *) help ;;
 esac

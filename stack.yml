@@ -1,14 +1,21 @@
-# docker version 1.12.0+
-# docker-compose version 1.9.0+
-version: '2.1'
+# docker version 17.09.0+
+version: '3.4'
 
 services:
   web:
     image: jwilder/nginx-proxy:alpine
-    container_name: web
-    mem_limit: 256m
-    hostname: web
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: web
     networks:
       local:
         aliases:
@@ -20,26 +27,27 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - web-certs:/etc/nginx/certs
       - web-dhparam:/etc/nginx/dhparam
-    restart: unless-stopped
 
   app:
     image: kre100/sharetribe:latest
-    container_name: app
-    mem_limit: 2048m
-    hostname: app
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: app
     networks:
       local:
         aliases:
           - app
     volumes:
       - app:/opt/app/www
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:${PORT-3000}"]
-    restart: unless-stopped
     environment:
       - VIRTUAL_HOST=sharetribe.local
       - VIRTUAL_PORT=3000
@@ -61,10 +69,18 @@ services:
 
   worker:
     image: kre100/sharetribe:latest
-    container_name: worker
-    mem_limit: 1024m
-    hostname: worker
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: worker
     networks:
       local:
         aliases:
@@ -73,10 +89,6 @@ services:
     volumes:
       - app:/opt/app/www
     command: worker
-    depends_on:
-      app:
-        condition: service_healthy
-    restart: unless-stopped
     environment:
       - RAILS_ENV=production
       - NODE_ENV=production
@@ -86,19 +98,24 @@ services:
 
   mysql:
     image: mysql:5.7
-    container_name: mysql
-    mem_limit: 1024m
-    hostname: mysql
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: mysql
     networks:
       local:
         aliases:
           - mysql
     volumes:
       - mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping"]
-    restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=123123123
       - MYSQL_DATABASE=sharetribe_db
@@ -107,52 +124,67 @@ services:
 
   smtp:
     image: catatnight/postfix
-    container_name: smtp
-    mem_limit: 256m
-    hostname: smtp
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: smtp
     networks:
       local:
         aliases:
           - smtp
-    restart: unless-stopped
     environment:
       - maildomain=sharetribe.local
       - smtp_user=noreply:passwd
 
   memcache:
     image: redis:3.2-alpine
-    container_name: memcache
-    mem_limit: 1024m
-    hostname: memcache
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: memcache
     networks:
       local:
         aliases:
           - memcache
     volumes:
       - memcache:/data
-    depends_on:
-      app:
-        condition: service_healthy
-    restart: unless-stopped
 
   adminer:
     image: adminer:standalone
-    container_name: adminer
-    mem_limit: 256m
-    hostname: adminer
+    deploy:
+#      placement:
+#        constraints:
+#          - node.hostname == example.local
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
     domainname: sharetribe.local
+    hostname: adminer
     networks:
       local:
         aliases:
           - adminer
     ports:
       - 8080:8080
-    depends_on:
-      mysql:
-        condition: service_healthy
-    restart: unless-stopped
 
 volumes:
   web-certs:
@@ -163,3 +195,4 @@ volumes:
 
 networks:
   local:
+    driver: overlay
