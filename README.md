@@ -22,7 +22,11 @@ docker-compose:
     13. check search system working
     14. check memcache in logs (optional)
 
+<<<<<<< HEAD
 docker stack: (THIS PART NOT TESTED)
+=======
+docker stack:
+>>>>>>> 5252e2c608edef7ad00a4d3d12d3a0d766d7a148
     1. git clone -b cloud-native git@gitlab.roobykon.com:anatoliy.zhuravlev/docker.git
     2. docker swarm init (enabled swarm mode to use 'docker stack' or adaptive docker-compose.yml for docker-compose command)
     3. docker stack deploy --compose-file stack.yml example
@@ -36,7 +40,10 @@ docker stack: (THIS PART NOT TESTED)
     11. check memcache in logs
 
 ToDo:
+<<<<<<< HEAD
     0. update and test stack.yml
+=======
+>>>>>>> 5252e2c608edef7ad00a4d3d12d3a0d766d7a148
     1. container with cron
     2. https with letsencrypt ssl certs
     3. container with backup system
