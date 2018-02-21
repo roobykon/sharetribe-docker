@@ -60,7 +60,7 @@ services:
       - app:/opt/app/www
     command: worker
     depends_on:
-      app:
+      mysql:
         condition: service_healthy
     restart: unless-stopped
     env_file: .env
@@ -93,7 +93,7 @@ services:
         aliases:
           - smtp
     depends_on:
-      app:
+      mysql:
         condition: service_healthy
     restart: unless-stopped
     env_file: .env
