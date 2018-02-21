@@ -1,13 +1,9 @@
 #### About
  - this images builds from original sharetribe github repo
  - you can set your personal git repo when building images
-<<<<<<< HEAD
  ```sh
  docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
  ```
-=======
-  - docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
->>>>>>> 7f8eae239e4fe9bfcc501c4e794da5c45be6eb15
 
 #### system requirements:
 
@@ -22,7 +18,7 @@
 ```sh
 mkdir [your_project_folder]
 cd [your_project_folder]
-git clone git@gitlab.roobykon.com:anatoliy.zhuravlev/docker.git .
+git clone https://github.com/roobykon/sharetribe-docker.git .
 cd prebuild
 docker build --tag sharetribe:prebuild .
 cd ../ && docker build --tag sharetribe .
@@ -40,7 +36,7 @@ docker exec app /docker-entrypoint.sh config all
 
 #### docker stack: (THIS PART NOT TESTED)
 ```sh
-git clone -b cloud-native git@gitlab.roobykon.com:anatoliy.zhuravlev/docker.git
+git clone https://github.com/roobykon/sharetribe-docker.git
 docker swarm init (enabled swarm mode to use 'docker stack' or adaptive docker-compose.yml for docker-compose command)
 docker stack deploy --compose-file stack.yml example
 check mysql logs "docker service logs -f example_mysql" and wait before "mysqld: ready for connections"
