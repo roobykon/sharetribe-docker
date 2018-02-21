@@ -1,7 +1,9 @@
 #### system requirements:
+
 ##### docker-compose:
  - docker version 1.12.0+
  - docker-compose version 1.9.0+
+
 ##### docker stack:
  - docker version 17.09.0+
 
@@ -9,7 +11,7 @@
 ```sh
 mkdir [your_project_folder]
 cd [your_project_folder]
-git clone -b cloud-native git@gitlab.roobykon.com:anatoliy.zhuravlev/docker.git .
+git clone git@gitlab.roobykon.com:anatoliy.zhuravlev/docker.git .
 cd prebuild
 docker build --tag sharetribe:prebuild .
 cd ../ && docker build --tag sharetribe .
