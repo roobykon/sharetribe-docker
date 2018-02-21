@@ -1,13 +1,9 @@
 #### About
  - this images builds from original sharetribe github repo
  - you can set your personal git repo when building images
-<<<<<<< HEAD
  ```sh
  docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
  ```
-=======
-  - docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
->>>>>>> 7f8eae239e4fe9bfcc501c4e794da5c45be6eb15
 
 #### system requirements:
 
