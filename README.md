@@ -17,7 +17,7 @@ docker build --tag sharetribe:prebuild .
 cd ../ && docker build --tag sharetribe .
 # check all variables in .env
 docker-compose up -d
-# waite ~90secret
+# waite ~90sec
 docker logs -f app
 # open in browser http://localhost and finish setup marketplace
 docker exec app /docker-entrypoint.sh --help
