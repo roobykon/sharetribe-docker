@@ -8,8 +8,9 @@
 #### docker-compose:
 ```sh
 mkdir [your_project_folder]
-cd [your_project_folder]/prebuild
+cd [your_project_folder]
 git clone -b cloud-native git@gitlab.roobykon.com:anatoliy.zhuravlev/docker.git .
+cd prebuild
 docker build --tag sharetribe:prebuild .
 cd ../ && docker build --tag sharetribe .
 # check all variables in .env
