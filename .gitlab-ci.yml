@@ -1,12 +1,16 @@
 variables:
-  REGISTRY_HOST: registry.kresto.pp.ua
+  REGISTRY_HOST: example
   IMAGE: $REGISTRY_HOST/$CI_PROJECT_PATH
   PROJECT_NAME: sharetribe
   SERVICE_NAME: app
+  RAILS_ENV: production
+  NODE_ENV: production
+  RS_GIT_BRANCH: sharetribe
+  RS_GIT_REMOTE_URL: https://gitlab-ci-token:${CI_JOB_TOKEN}@g${REGISTRY_HOST}/example/example1.git
 
 stages:
   - build
-  - deploy
+#  - deploy
 
 build:
   stage: build
@@ -14,17 +18,24 @@ build:
     - docker info
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $REGISTRY_HOST
   script:
-    - docker build --pull --build-arg RS_GIT_REMOTE_URL=https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.kresto.pp.ua/example/example1.git --build-arg RS_GIT_BRANCH=sharetribe --tag $IMAGE .
+    - docker build \
+        --pull \
+        --build-arg ${RAILS_ENV} \
+        --build-arg ${NODE_ENV} \
+        --build-arg  ${RS_GIT_BRANCH} \
+        --build-arg ${RS_GIT_REMOTE_URL} \
+        --tag $IMAGE \
+        .
     - docker push $IMAGE
 
-deploy_development:
-  stage: deploy
-  image: kre100/rancher-cli-tools
-  script:
-    - rancher-compose --project-name ${PROJECT_NAME} up -d --upgrade --force-upgrade --pull ${SERVICE_NAME}
-  environment:
-    name: development
-    url: http://sharetribe.kresto.pp.ua/
-  only:
-    - sharetribe
+#deploy_development:
+#  stage: deploy
+#  image: kre100/rancher-cli-tools
+#  script:
+#    - rancher-compose --project-name ${PROJECT_NAME} up -d --upgrade --force-upgrade --pull ${SERVICE_NAME}
+#  environment:
+#    name: development
+#    url: http://localhost/
+#  only:
+#    - sharetribe
 #  when: manual
