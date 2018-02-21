@@ -22,7 +22,7 @@ build:
         --pull \
         --build-arg ${RAILS_ENV} \
         --build-arg ${NODE_ENV} \
-        --build-arg  ${RS_GIT_BRANCH} \
+        --build-arg ${RS_GIT_BRANCH} \
         --build-arg ${RS_GIT_REMOTE_URL} \
         --tag $IMAGE \
         .
