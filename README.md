@@ -4,6 +4,7 @@
  ```sh
  docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
  ```
+ - for testing you may use builded images roobykon/sharetribe:prebuild and roobykon/sharetribe:latest
 
 #### system requirements:
 
