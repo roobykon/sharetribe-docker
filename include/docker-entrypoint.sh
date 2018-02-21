@@ -128,7 +128,6 @@ case ${1}:${2} in
                 --port "${PORT:-3000}" \
                 --procfile Procfile.static
         else
-            script/prepare-assets.sh
             bundle exec passenger \
                 start \
                     --port "${PORT:-3000}" \
