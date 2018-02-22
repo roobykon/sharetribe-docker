@@ -20,9 +20,6 @@
 mkdir [your_project_folder]
 cd [your_project_folder]
 git clone https://github.com/roobykon/sharetribe-docker.git .
-cd prebuild
-docker build --tag sharetribe:prebuild .
-cd ../ && docker build --tag sharetribe .
 # check all variables in .env
 docker-compose up -d
 # waite ~90sec
