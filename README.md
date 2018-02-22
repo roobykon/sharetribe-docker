@@ -51,6 +51,7 @@ check memcache in logs
 ```
 
 #### ToDo:
+  - set user UID in container via ARG
   - update and test stack.yml
   - container with cron
   - https with letsencrypt ssl certs
