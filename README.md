@@ -48,9 +48,10 @@ check memcache in logs
 ```
 
 #### ToDo:
-  - set user UID in container via ARG
-  - update and test stack.yml
-  - container with cron
-  - https with letsencrypt ssl certs
-  - container with backup system
-  - check why delayed_job cant exec sphinx commands when delayed_job and sphinx on separate hosts
+  - [ ] add Letter Opener support for development env
+  - [x] set user UID in container via ARG
+  - [ ] update and test stack.yml
+  - [ ] container with cron
+  - [ ] https with letsencrypt ssl certs
+  - [ ] container with backup system
+  - [ ] check why delayed_job cant exec sphinx commands when delayed_job and sphinx on separate hosts
