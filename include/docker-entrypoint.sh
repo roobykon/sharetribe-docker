@@ -123,6 +123,7 @@ case ${1}:${2} in
             ${0} app deploy
         fi
         if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+            bundle install
             bundle exec rake assets:clobber
             foreman start \
                 --port "${PORT:-3000}" \
