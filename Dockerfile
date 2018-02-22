@@ -1,10 +1,16 @@
-FROM sharetribe:prebuild
-
-SHELL ["/bin/bash", "--login", "-c"]
+FROM roobykon/sharetribe:prebuild
 
 LABEL maintainer="Roobykon Software - roobykon.com \
                   anatoliy.zhuravlev@roobykon.com \
                   contact@roobykon.com"
+
+SHELL ["/bin/bash", "--login", "-c"]
+
+ARG RS_UID="1000"
+ARG RAILS_ENV="production"
+ARG NODE_ENV="production"
+ARG RS_GIT_REMOTE_URL="https://github.com/sharetribe/sharetribe.git"
+ARG RS_GIT_BRANCH="master"
 
 ENV NPM_CONFIG_LOGLEVEL="error" \
     NPM_CONFIG_PRODUCTION="true" \
@@ -12,13 +18,8 @@ ENV NPM_CONFIG_LOGLEVEL="error" \
     RS_USER="app" \
     RS_APP_ROOT="www"
 
-ARG RAILS_ENV="production"
-ARG NODE_ENV="production"
-ARG RS_GIT_REMOTE_URL="https://github.com/sharetribe/sharetribe.git"
-ARG RS_GIT_BRANCH="master"
-
 RUN useradd \
-        --uid 1000 \
+        --uid ${RS_UID} \
         --user-group \
         --create-home \
         --home-dir ${RS_HOME_DIR_PREFIX}/${RS_USER} \

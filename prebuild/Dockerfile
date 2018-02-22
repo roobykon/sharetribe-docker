@@ -1,10 +1,10 @@
 FROM ruby:2.3.4
 
-SHELL ["/bin/bash", "--login", "-c"]
-
 LABEL maintainer="Roobykon Software - roobykon.com \
                   anatoliy.zhuravlev@roobykon.com \
                   contact@roobykon.com"
+
+SHELL ["/bin/bash", "--login", "-c"]
 
 ENV NODE_VERSION="7.8.0" \
     NPM_CONFIG_LOGLEVEL="info" \

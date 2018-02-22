@@ -23,9 +23,16 @@ services:
     restart: unless-stopped
 
   app:
-    image: sharetribe
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RS_UID: 1000
+        RS_GIT_BRANCH: master
+        RS_GIT_REMOTE_URL: https://github.com/sharetribe/sharetribe.git
+    image: roobykon/sharetribe
     container_name: app
-    mem_limit: 2048m
+    mem_limit: 1024m
     hostname: app
     domainname: ${RS_DOMAIN}
     networks:
@@ -46,9 +53,9 @@ services:
       - VIRTUAL_PORT=${PORT:-3000}
 
   worker:
-    image: sharetribe
+    image: roobykon/sharetribe
     container_name: worker
-    mem_limit: 1024m
+    mem_limit: 512m
     hostname: worker
     domainname: ${RS_DOMAIN}
     networks:
@@ -68,7 +75,7 @@ services:
   mysql:
     image: mysql:5.7
     container_name: mysql
-    mem_limit: 1024m
+    mem_limit: 512m
     hostname: mysql
     domainname: ${RS_DOMAIN}
     networks:
