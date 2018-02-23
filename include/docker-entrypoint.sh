@@ -20,8 +20,8 @@ function mysql_exec() {
 function app_database_yml() {
     FUNC_NAME="app_database_yml"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/database.yml"
-    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ -n ${MYSQL_DATABASE} ]] && [[ -n ${MYSQL_USER} ]] && [[ -n ${MYSQL_PASSWORD} ]] && [[ -n ${MYSQL_HOST} ]]; then
+        echo_info ${FUNC_NAME} ${FILE_PATH}
         echo "${RAILS_ENV}:" > ${FILE_PATH}
         echo "    adapter: mysql2" >> ${FILE_PATH}
         echo "    database: ${MYSQL_DATABASE}" >> ${FILE_PATH}
@@ -35,17 +35,19 @@ function app_database_yml() {
 function app_config_yml() {
     FUNC_NAME="app_config_yml"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/config.yml"
-    echo_info ${FUNC_NAME} ${FILE_PATH}
-    echo "${RAILS_ENV}:" > ${FILE_PATH}
-    echo "  secret_key_base: \"${RS_SECRET_KEY_BASE:-$(bin/bundle exec rake secret)}\"" >> ${FILE_PATH}
-    echo "  sharetribe_mail_from_address: \"${RS_AUTH_USER}@${RS_DOMAIN}\"" >> ${FILE_PATH}
+    if [[ ! -f ${FILE_PATH} ]]; then
+        echo_info ${FUNC_NAME} ${FILE_PATH}
+        echo "${RAILS_ENV}:" > ${FILE_PATH}
+        echo "  secret_key_base: \"${RS_SECRET_KEY_BASE:-$(bin/bundle exec rake secret)}\"" >> ${FILE_PATH}
+        echo "  sharetribe_mail_from_address: \"${RS_AUTH_USER}@${RS_DOMAIN}\"" >> ${FILE_PATH}
+    fi
 }
 
 function app_msmtp_conf() {
     FUNC_NAME="app_msmtp_conf"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtprc"
-    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ -n ${RS_DOMAIN} ]] && [[ -n ${RS_AUTH_USER} ]] && [[ -n ${RS_AUTH_PASS} ]]; then
+        echo_info ${FUNC_NAME} ${FILE_PATH}
         echo "# Set default values for all following accounts." > ${FILE_PATH}
         echo "defaults" >> ${FILE_PATH}
         echo "auth           on" >> ${FILE_PATH}
@@ -70,9 +72,18 @@ function app_msmtp_conf() {
 function db_structure_load() {
     FUNC_NAME="db_structure_load"
     FILE_PATH="mysql_exec"
-    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ $(mysql_exec "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") = 0 ]]; then
+        echo_info ${FUNC_NAME} ${FILE_PATH}
         bundle exec rake db:structure:load
+    fi
+}
+
+function tmp_clean() {
+    FUNC_NAME="tmp_clean"
+    FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/tmp/pids/server.pid"
+    if [[ -f ${FILE_PATH} ]]; then
+        echo_info ${FUNC_NAME} ${FILE_PATH}
+        rm -rf ${FILE_PATH}
     fi
 }
 
@@ -115,6 +126,7 @@ case ${1}:${2} in
         bundle exec rake db:migrate
     ;;
     app:)
+        tmp_clean
         app_database_yml
         app_config_yml
         app_msmtp_conf
