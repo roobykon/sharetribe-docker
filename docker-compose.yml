@@ -5,7 +5,6 @@ version: '2.1'
 services:
   web:
     image: jwilder/nginx-proxy:alpine
-    container_name: web
     mem_limit: 128m
     hostname: web
     domainname: ${RS_DOMAIN}
@@ -30,8 +29,9 @@ services:
         RS_UID: 1000
         RS_GIT_BRANCH: master
         RS_GIT_REMOTE_URL: https://github.com/sharetribe/sharetribe.git
+        RAILS_ENV: production
+        NODE_ENV: production
     image: roobykon/sharetribe
-    container_name: app
     mem_limit: 1024m
     hostname: app
     domainname: ${RS_DOMAIN}
@@ -54,7 +54,6 @@ services:
 
   worker:
     image: roobykon/sharetribe
-    container_name: worker
     mem_limit: 512m
     hostname: worker
     domainname: ${RS_DOMAIN}
@@ -74,7 +73,6 @@ services:
 
   mysql:
     image: mysql:5.7
-    container_name: mysql
     mem_limit: 512m
     hostname: mysql
     domainname: ${RS_DOMAIN}
@@ -91,7 +89,6 @@ services:
 
   smtp:
     image: catatnight/postfix
-    container_name: smtp
     mem_limit: 128m
     hostname: smtp
     domainname: ${RS_DOMAIN}
@@ -107,7 +104,6 @@ services:
 
   memcache:
     image: redis:3.2-alpine
-    container_name: memcache
     mem_limit: 512m
     hostname: memcache
     domainname: ${RS_DOMAIN}
@@ -124,7 +120,6 @@ services:
 
   adminer:
     image: adminer:standalone
-    container_name: adminer
     mem_limit: 128m
     hostname: adminer
     domainname: ${RS_DOMAIN}

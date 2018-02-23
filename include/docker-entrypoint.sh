@@ -83,7 +83,7 @@ function tmp_clean() {
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/tmp/pids/server.pid"
     if [[ -f ${FILE_PATH} ]]; then
         echo_info ${FUNC_NAME} ${FILE_PATH}
-        rm -rf ${FILE_PATH}
+        rm --recursive --force ${FILE_PATH}
     fi
 }
 

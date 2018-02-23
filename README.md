@@ -1,10 +1,19 @@
 #### About
  - this images builds from original sharetribe github repo
- - you can set your personal git repo when building images
+ - you can set custom user UID (default 1000) when building image. When container run sharetribe data load to "named volume" and bind to ./data and your user has full access to sharetribe data
  ```sh
- docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
+ docker build --build-arg ${RS_UID} --tag sharetribe .
+ ```
+ - you can set your personal git repo when building images. Default valuens = master branch from official repo
+ ```sh
+ docker build --build-arg ${RS_GIT_BRANCH} --build-arg ${RS_GIT_REMOTE_URL} --tag sharetribe .
+ ```
+ - you can set RAILS_ENV when  building images. Default valuens = production
+ ```sh
+ docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --tag sharetribe .
  ```
  - for testing you may use builded images roobykon/sharetribe:prebuild and roobykon/sharetribe:latest
+ - delayed_job and sphinx launched in one container - worker 
 
 #### system requirements:
 
@@ -17,19 +26,20 @@
 
 #### docker-compose:
 ```sh
-mkdir [your_project_folder]
-cd [your_project_folder]
-git clone https://github.com/roobykon/sharetribe-docker.git .
-# check all variables in .env
+git clone https://github.com/roobykon/sharetribe-docker.git [your_project_folder_name]
+cd [your_project_folder_name]
+# docker-compose.yml set vars: RS_UID RS_GIT_BRANCH RS_GIT_REMOTE_URL RAILS_ENV NODE_ENV
+# .env check all vars
 docker-compose up -d
-# waite ~90sec
-docker logs -f app
+# wait when image build finish ~5min
+# check app logs if app container dont start
+docker logs -f $(docker ps --filter name=app --format {{.Names}})
 # open in browser http://localhost and finish setup marketplace
-docker exec app /docker-entrypoint.sh --help
-docker exec app /docker-entrypoint.sh config all
+docker exec $(docker ps --filter name=app --format {{.Names}}) /docker-entrypoint.sh --help
+docker exec $(docker ps --filter name=app --format {{.Names}}) /docker-entrypoint.sh config all
 # check email system working
 # check search system working
-# check memcache in logs (optional)
+# check memcache in app logs (optional)
 ```
 
 #### docker stack: (THIS PART NOT TESTED)
