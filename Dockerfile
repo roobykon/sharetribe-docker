@@ -34,12 +34,12 @@ WORKDIR ${RS_HOME_DIR_PREFIX}/${RS_USER}
 
 RUN git clone --branch ${RS_GIT_BRANCH} ${RS_GIT_REMOTE_URL} ${RS_APP_ROOT} && \
     cd ${RS_APP_ROOT} && \
-    gem install bundler rake:11.3.0 foreman && \
+    gem install bundler rake:11.3.0 foreman mailcatcher && \
     bundle install && \
     npm install && \
     script/prepare-assets.sh
 
 WORKDIR ${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}
-EXPOSE 3000
+EXPOSE 3000 1080
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["app"]

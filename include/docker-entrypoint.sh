@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-export SPHINX_HOST=search
-export MYSQL_HOST=mysql
-export redis_host=memcache
-export redis_port=6379
-export redis_db=1
-export redis_expires_in=240
+export SPHINX_HOST="${SPHINX_HOST:-search}"
+export MYSQL_HOST="${MYSQL_HOST:-mysql}"
+export redis_host="${redis_host:-memcache}"
+export redis_port="${redis_port:-6379}"
+export redis_db="${redis_db:-1}"
+export redis_expires_in="${redis_expires_in:-240}"
 
 function echo_info() {
     echo "${1}"
@@ -46,8 +46,27 @@ function app_config_yml() {
 function app_msmtp_conf() {
     FUNC_NAME="app_msmtp_conf"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtprc"
-    if [[ -n ${RS_DOMAIN} ]] && [[ -n ${RS_AUTH_USER} ]] && [[ -n ${RS_AUTH_PASS} ]]; then
-        echo_info ${FUNC_NAME} ${FILE_PATH}
+    echo_info ${FUNC_NAME} ${FILE_PATH}
+    if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+        echo "# Set default values for all following accounts." > ${FILE_PATH}
+        echo "defaults" >> ${FILE_PATH}
+        echo "auth           off" >> ${FILE_PATH}
+        echo "tls            off" >> ${FILE_PATH}
+        echo "tls_trust_file /etc/ssl/certs/ca-certificates.crt" >> ${FILE_PATH}
+        echo "logfile        ${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtp.log" >> ${FILE_PATH}
+        echo "" >> ${FILE_PATH}
+        echo "# smtp" >> ${FILE_PATH}
+        echo "account        local" >> ${FILE_PATH}
+        echo "host           localhost" >> ${FILE_PATH}
+        echo "port           1025" >> ${FILE_PATH}
+        echo "from           ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
+        echo "# user           ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
+        echo "# password       ${RS_AUTH_PASS}" >> ${FILE_PATH}
+        echo "" >> ${FILE_PATH}
+        echo "# Set a default account" >> ${FILE_PATH}
+        echo "account default : local" >> ${FILE_PATH}
+        chmod u=rw,g=,o= ${FILE_PATH}
+    else
         echo "# Set default values for all following accounts." > ${FILE_PATH}
         echo "defaults" >> ${FILE_PATH}
         echo "auth           on" >> ${FILE_PATH}
@@ -65,8 +84,8 @@ function app_msmtp_conf() {
         echo "" >> ${FILE_PATH}
         echo "# Set a default account" >> ${FILE_PATH}
         echo "account default : local" >> ${FILE_PATH}
+        chmod u=rw,g=,o= ${FILE_PATH}
     fi
-    chmod u=rw,g=,o= ${FILE_PATH}
 }
 
 function db_structure_load() {
@@ -151,6 +170,7 @@ case ${1}:${2} in
     ;;
     worker:)
         app_msmtp_conf
+        mailcatcher --http-ip 0.0.0.0 --no-quit
         bundle exec rake ts:configure ts:index ts:start
         bundle exec rake jobs:work
     ;;
