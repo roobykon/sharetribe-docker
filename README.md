@@ -13,7 +13,7 @@
  docker build --build-arg ${RAILS_ENV} --build-arg ${NODE_ENV} --tag sharetribe .
  ```
  - for testing you may use builded images roobykon/sharetribe:prebuild and roobykon/sharetribe:latest
- - delayed_job and sphinx launched in one container - worker 
+ - delayed_job and sphinx launched in one container - worker
 
 #### system requirements:
 
@@ -40,6 +40,8 @@ docker exec $(docker ps --filter name=app --format {{.Names}}) /docker-entrypoin
 # check email system working
 # check search system working
 # check memcache in app logs (optional)
+# show stats
+docker stats $(docker ps --filter name="${PWD##*/}" --format {{.Names}})
 ```
 
 #### docker stack: (THIS PART NOT TESTED)

@@ -5,7 +5,7 @@ version: '2.1'
 services:
   web:
     image: jwilder/nginx-proxy:alpine
-    mem_limit: 128m
+    mem_limit: 64m
     hostname: web
     domainname: ${RS_DOMAIN}
     networks:
@@ -32,7 +32,7 @@ services:
         RAILS_ENV: production
         NODE_ENV: production
     image: roobykon/sharetribe
-    mem_limit: 1024m
+    mem_limit: 2048m
     hostname: app
     domainname: ${RS_DOMAIN}
     networks:
@@ -54,7 +54,7 @@ services:
 
   worker:
     image: roobykon/sharetribe
-    mem_limit: 512m
+    mem_limit: 1024m
     hostname: worker
     domainname: ${RS_DOMAIN}
     networks:
@@ -62,6 +62,8 @@ services:
         aliases:
           - worker
           - search
+    ports:
+      - 127.0.0.1:1080:1080
     volumes:
       - app:/opt/app/www
     command: worker
@@ -73,7 +75,7 @@ services:
 
   mysql:
     image: mysql:5.7
-    mem_limit: 512m
+    mem_limit: 1024m
     hostname: mysql
     domainname: ${RS_DOMAIN}
     networks:
@@ -89,7 +91,7 @@ services:
 
   smtp:
     image: catatnight/postfix
-    mem_limit: 128m
+    mem_limit: 64m
     hostname: smtp
     domainname: ${RS_DOMAIN}
     networks:
@@ -120,7 +122,7 @@ services:
 
   adminer:
     image: adminer:standalone
-    mem_limit: 128m
+    mem_limit: 64m
     hostname: adminer
     domainname: ${RS_DOMAIN}
     networks:
@@ -128,11 +130,13 @@ services:
         aliases:
           - adminer
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     depends_on:
       mysql:
         condition: service_healthy
     restart: unless-stopped
+    environment:
+      - ADMINER_DESIGN=nicu
 
 volumes:
   web-certs:
