@@ -14,7 +14,7 @@ function echo_info() {
 }
 
 function mysql_exec() {
-    mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}" 2>&1
+    mysql --host=${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --skip-column-names --batch --execute="${1}" > /dev/null 2>&1
 }
 
 function app_database_yml() {
@@ -153,13 +153,14 @@ case ${1}:${2} in
         if [[ $(mysql_exec "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA = \"${MYSQL_DATABASE}\";") -ne 0 ]]; then
             ${0} app deploy
         fi
+        bundle install
         if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
-            bundle install
             bundle exec rake assets:clobber
             foreman start \
                 --port "${PORT:-3000}" \
                 --procfile Procfile.static
         else
+            bundle exec rake assets:precompile
             bundle exec passenger \
                 start \
                     --port "${PORT:-3000}" \
@@ -170,7 +171,9 @@ case ${1}:${2} in
     ;;
     worker:)
         app_msmtp_conf
-        mailcatcher --http-ip 0.0.0.0 --no-quit
+        if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+            mailcatcher --http-ip 0.0.0.0 --no-quit
+        fi
         bundle exec rake ts:configure ts:index ts:start
         bundle exec rake jobs:work
     ;;

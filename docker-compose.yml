@@ -31,7 +31,7 @@ services:
         RS_GIT_REMOTE_URL: https://github.com/sharetribe/sharetribe.git
         RAILS_ENV: production
         NODE_ENV: production
-    image: roobykon/sharetribe
+    image: ${PWD##*/}/sharetribe
     mem_limit: 2048m
     hostname: app
     domainname: ${RS_DOMAIN}
@@ -46,6 +46,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:${PORT-3000}"]
+      timeout: 300s
     restart: unless-stopped
     env_file: .env
     environment:
@@ -53,7 +54,7 @@ services:
       - VIRTUAL_PORT=${PORT:-3000}
 
   worker:
-    image: roobykon/sharetribe
+    image: ${PWD##*/}/sharetribe
     mem_limit: 1024m
     hostname: worker
     domainname: ${RS_DOMAIN}
