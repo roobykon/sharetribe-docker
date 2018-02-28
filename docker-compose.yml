@@ -6,6 +6,8 @@ services:
   web:
     image: jwilder/nginx-proxy:alpine
     mem_limit: 64m
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
     hostname: web
     domainname: ${RS_DOMAIN}
     networks:
@@ -17,9 +19,28 @@ services:
       - 443:443
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - web-certs:/etc/nginx/certs
-      - web-dhparam:/etc/nginx/dhparam
+      - web-certs:/etc/nginx/certs:ro
+      - web-dhparam:/etc/nginx/dhparam:ro
+      - web-vhostd:/etc/nginx/vhost.d
+      - web-challenge:/usr/share/nginx/html
     restart: unless-stopped
+
+#  web-ssl:
+#    image: jrcs/letsencrypt-nginx-proxy-companion
+#    mem_limit: 64m
+#    hostname: web-ssl
+#    domainname: ${RS_DOMAIN}
+#    networks:
+#      local:
+#        aliases:
+#           - web
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - web-certs:/etc/nginx/certs:rw
+#      - web-dhparam:/etc/nginx/dhparam:rw
+#      - web-vhostd:/etc/nginx/vhost.d
+#      - web-challenge:/usr/share/nginx/html
+#    restart: unless-stopped
 
   app:
     build:
@@ -32,7 +53,8 @@ services:
         RAILS_ENV: production
         NODE_ENV: production
     image: roobykon/sharetribe
-    mem_limit: 2048m
+    mem_limit: 1024m
+    scale: 3
     hostname: app
     domainname: ${RS_DOMAIN}
     networks:
@@ -52,10 +74,12 @@ services:
     environment:
       - VIRTUAL_HOST=${RS_DOMAIN}
       - VIRTUAL_PORT=${PORT:-3000}
+      - LETSENCRYPT_HOST=${RS_DOMAIN}
+      - LETSENCRYPT_EMAIL=admin@${RS_DOMAIN}
 
   worker:
     image: roobykon/sharetribe
-    mem_limit: 1024m
+    mem_limit: 512m
     hostname: worker
     domainname: ${RS_DOMAIN}
     networks:
@@ -76,7 +100,7 @@ services:
 
   mysql:
     image: mysql:5.7
-    mem_limit: 1024m
+    mem_limit: 512m
     hostname: mysql
     domainname: ${RS_DOMAIN}
     networks:
@@ -107,7 +131,7 @@ services:
 
   memcache:
     image: redis:3.2-alpine
-    mem_limit: 512m
+    mem_limit: 64m
     hostname: memcache
     domainname: ${RS_DOMAIN}
     networks:
@@ -142,6 +166,8 @@ services:
 volumes:
   web-certs:
   web-dhparam:
+  web-vhostd:
+  web-challenge:
   app:
     driver_opts:
       type: none
