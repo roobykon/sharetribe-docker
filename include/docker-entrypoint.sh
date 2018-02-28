@@ -7,6 +7,7 @@ export redis_host="${redis_host:-memcache}"
 export redis_port="${redis_port:-6379}"
 export redis_db="${redis_db:-1}"
 export redis_expires_in="${redis_expires_in:-240}"
+export RS_MAILCATCHER="1"
 
 function echo_info() {
     echo "${1}"
@@ -47,7 +48,7 @@ function app_msmtp_conf() {
     FUNC_NAME="app_msmtp_conf"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/.msmtprc"
     echo_info ${FUNC_NAME} ${FILE_PATH}
-    if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+    if [[ $RS_MAILCATCHER = 1 ]]; then
         echo "# Set default values for all following accounts." > ${FILE_PATH}
         echo "defaults" >> ${FILE_PATH}
         echo "auth           off" >> ${FILE_PATH}
@@ -65,7 +66,6 @@ function app_msmtp_conf() {
         echo "" >> ${FILE_PATH}
         echo "# Set a default account" >> ${FILE_PATH}
         echo "account default : local" >> ${FILE_PATH}
-        chmod u=rw,g=,o= ${FILE_PATH}
     else
         echo "# Set default values for all following accounts." > ${FILE_PATH}
         echo "defaults" >> ${FILE_PATH}
@@ -84,8 +84,8 @@ function app_msmtp_conf() {
         echo "" >> ${FILE_PATH}
         echo "# Set a default account" >> ${FILE_PATH}
         echo "account default : local" >> ${FILE_PATH}
-        chmod u=rw,g=,o= ${FILE_PATH}
     fi
+    chmod u=rw,g=,o= ${FILE_PATH}
 }
 
 function db_structure_load() {
@@ -172,7 +172,7 @@ case ${1}:${2} in
     worker:)
         app_msmtp_conf
         bundle install
-        if [[ $RAILS_ENV = development ]] && [[ $NODE_ENV = development ]]; then
+        if [[ $RS_MAILCATCHER = 1 ]]; then
             mailcatcher --http-ip 0.0.0.0 --no-quit
         fi
         bundle exec rake ts:configure ts:index ts:start

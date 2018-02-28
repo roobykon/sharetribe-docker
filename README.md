@@ -33,15 +33,15 @@ cd [your_project_folder_name]
 docker-compose up -d
 # wait when image build finish ~5min
 # check app logs if app container dont start
-docker logs -f $(docker ps --filter name=app --format {{.Names}})
+docker-compose logs --follow --timestamps --tail=100 app
 # open in browser http://localhost and finish setup marketplace
-docker exec $(docker ps --filter name=app --format {{.Names}}) /docker-entrypoint.sh --help
-docker exec $(docker ps --filter name=app --format {{.Names}}) /docker-entrypoint.sh config all
+docker-compose exec app /docker-entrypoint.sh --help
+docker-compose exec app /docker-entrypoint.sh config all
 # check email system working
 # check search system working
 # check memcache in app logs (optional)
 # show stats
-docker stats $(docker ps --filter name="${PWD##*/}" --format {{.Names}})
+docker stats
 ```
 
 #### docker stack: (THIS PART NOT TESTED)
