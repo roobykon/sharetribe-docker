@@ -17,9 +17,28 @@ services:
       - 443:443
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - web-certs:/etc/nginx/certs
-      - web-dhparam:/etc/nginx/dhparam
+      - web-certs:/etc/nginx/certs:ro
+      - web-dhparam:/etc/nginx/dhparam:ro
+      - web-vhostd:/etc/nginx/vhost.d
+      - web-challenge:/usr/share/nginx/html
     restart: unless-stopped
+
+#  web-ssl:
+#    image: jrcs/letsencrypt-nginx-proxy-companion
+#    mem_limit: 64m
+#    hostname: web-ssl
+#    domainname: ${RS_DOMAIN}
+#    networks:
+#      local:
+#        aliases:
+#           - web
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - web-certs:/etc/nginx/certs:rw
+#      - web-dhparam:/etc/nginx/dhparam:rw
+#      - web-vhostd:/etc/nginx/vhost.d
+#      - web-challenge:/usr/share/nginx/html
+#    restart: unless-stopped
 
   app:
     build:
@@ -52,6 +71,8 @@ services:
     environment:
       - VIRTUAL_HOST=${RS_DOMAIN}
       - VIRTUAL_PORT=${PORT:-3000}
+      - LETSENCRYPT_HOST=${RS_DOMAIN}
+      - LETSENCRYPT_EMAIL=admin@${RS_DOMAIN}
 
   worker:
     image: roobykon/sharetribe
@@ -142,6 +163,8 @@ services:
 volumes:
   web-certs:
   web-dhparam:
+  web-vhostd:
+  web-challenge:
   app:
     driver_opts:
       type: none
