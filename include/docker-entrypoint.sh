@@ -7,7 +7,7 @@ export redis_host="${redis_host:-memcache}"
 export redis_port="${redis_port:-6379}"
 export redis_db="${redis_db:-1}"
 export redis_expires_in="${redis_expires_in:-240}"
-export RS_MAILCATCHER="1"
+export RS_MAILCATCHER="${RS_MAILCATCHER:-0}"
 
 function echo_info() {
     echo "${1}"
@@ -100,8 +100,8 @@ function db_structure_load() {
 function tmp_clean() {
     FUNC_NAME="tmp_clean"
     FILE_PATH="${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/tmp/pids/server.pid"
+    echo_info ${FUNC_NAME} ${FILE_PATH}
     if [[ -f ${FILE_PATH} ]]; then
-        echo_info ${FUNC_NAME} ${FILE_PATH}
         rm --recursive --force ${FILE_PATH}
     fi
 }
@@ -136,6 +136,7 @@ case ${1}:${2} in
     ;;
     config:payments)
         mysql_exec "INSERT INTO ${MYSQL_DATABASE}.payment_settings (id, active, community_id, payment_gateway, payment_process, commission_from_seller, minimum_price_cents, minimum_price_currency, minimum_transaction_fee_cents, minimum_transaction_fee_currency, confirmation_after_days, created_at, updated_at, api_client_id, api_private_key, api_publishable_key, api_verified, api_visible_private_key, api_country) VALUES (121240, 1, 1, 'paypal', 'preauthorize', NULL, NULL, NULL, NULL, NULL, 14, '2017-10-22 20:12:39', '2017-11-13 23:03:39', NULL, NULL, NULL, 0, NULL, NULL), (121241, 1, 1, 'stripe', 'preauthorize', NULL, NULL, NULL, NULL, NULL, 14, '2017-10-22 20:12:39', '2017-11-13 23:03:39', NULL, NULL, NULL, 0, NULL, NULL);"
+        echo "  app_encryption_key: \"$(rake secret | cut --characters=1-64)\"" >> ${RS_HOME_DIR_PREFIX}/${RS_USER}/${RS_APP_ROOT}/config/config.yml
     ;;
     config:all)
         ${0} config domain
@@ -160,7 +161,7 @@ case ${1}:${2} in
                 --port "${PORT:-3000}" \
                 --procfile Procfile.static
         else
-            bundle exec rake assets:precompile
+            bundle exec rake assets:clobber
             bundle exec passenger \
                 start \
                     --port "${PORT:-3000}" \
