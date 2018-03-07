@@ -161,7 +161,7 @@ case ${1}:${2} in
                 --port "${PORT:-3000}" \
                 --procfile Procfile.static
         else
-            bundle exec rake assets:clobber
+            bundle exec rake assets:precompile
             bundle exec passenger \
                 start \
                     --port "${PORT:-3000}" \
