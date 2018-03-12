@@ -20,7 +20,7 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - web-certs:/etc/nginx/certs:ro
-      - web-dhparam:/etc/nginx/dhparam:ro
+      - web-dhparam:/etc/nginx/dhparam
       - web-vhostd:/etc/nginx/vhost.d
       - web-challenge:/usr/share/nginx/html
     restart: unless-stopped
@@ -54,7 +54,6 @@ services:
         NODE_ENV: production
     image: roobykon/sharetribe
     mem_limit: 1024m
-    scale: 3
     hostname: app
     domainname: ${RS_DOMAIN}
     networks:
@@ -85,6 +84,7 @@ services:
     networks:
       local:
         aliases:
+          - sendmail
           - worker
           - search
     ports:

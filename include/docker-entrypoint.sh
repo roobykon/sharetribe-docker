@@ -58,7 +58,7 @@ function app_msmtp_conf() {
         echo "" >> ${FILE_PATH}
         echo "# smtp" >> ${FILE_PATH}
         echo "account        local" >> ${FILE_PATH}
-        echo "host           localhost" >> ${FILE_PATH}
+        echo "host           sendmail" >> ${FILE_PATH}
         echo "port           1025" >> ${FILE_PATH}
         echo "from           ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
         echo "# user           ${RS_AUTH_USER}@${RS_DOMAIN}" >> ${FILE_PATH}
@@ -174,7 +174,7 @@ case ${1}:${2} in
         app_msmtp_conf
         bundle install
         if [[ $RS_MAILCATCHER = 1 ]]; then
-            mailcatcher --http-ip 0.0.0.0 --no-quit
+            mailcatcher --ip 0.0.0.0 --no-quit
         fi
         bundle exec rake ts:configure ts:index ts:start
         bundle exec rake jobs:work
